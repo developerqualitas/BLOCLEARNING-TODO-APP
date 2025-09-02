@@ -9,9 +9,12 @@ import 'package:flutter/cupertino.dart';
 part 'active_todo_state.dart';
 
 class ActiveTodoCubit extends Cubit<ActiveTodoState> {
-  final TodoCubit todoCubit;
   late StreamSubscription todoStreamSubscription;
-  ActiveTodoCubit(this.todoCubit) : super(ActiveTodoState.initial()) {
+
+  final int initialActiveTodoCount;
+  final TodoCubit todoCubit;
+
+  ActiveTodoCubit({required this.initialActiveTodoCount ,required this.todoCubit}) : super(ActiveTodoState(activeTodoCount: initialActiveTodoCount)) {
     todoStreamSubscription = todoCubit.stream.listen((TodoState todoState) {
       debugPrint("todo state : $todoState");
 

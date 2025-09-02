@@ -1,5 +1,5 @@
 import 'package:bl_todo_app/cubits/cubits.dart';
-import 'package:bl_todo_app/pages/todo_page.dart';
+import 'package:bl_todo_app/pages/todo/todo_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -21,15 +21,19 @@ class MyApp extends StatelessWidget {
         BlocProvider<FilteredTodosCubit>(
           create:
               (context) => FilteredTodosCubit(
+                initialTodoList : context.read<TodoCubit>().state.todoList,
                 todoCubit: BlocProvider.of<TodoCubit>(context),
-
                 todoSearchCubit: BlocProvider.of<TodoSearchCubit>(context),
                 todoFilterCubit: BlocProvider.of<TodoFilterCubit>(context),
               ),
         ),
         BlocProvider<ActiveTodoCubit>(
           create:
-              (context) => ActiveTodoCubit(BlocProvider.of<TodoCubit>(context)),
+              (context) => ActiveTodoCubit(
+                initialActiveTodoCount:
+                    context.read<TodoCubit>().state.todoList.length,
+                todoCubit: BlocProvider.of<TodoCubit>(context),
+              ),
         ),
       ],
       child: MaterialApp(

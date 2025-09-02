@@ -5,7 +5,9 @@ class TodoState extends Equatable {
   const TodoState({required this.todoList});
 
   factory TodoState.initial() {
-    return TodoState(todoList: []);
+    return TodoState(todoList: [
+      TodoModel(desc: "desc")
+    ]);
   }
 
   TodoState copyWith({List<TodoModel>? todoList}) {
