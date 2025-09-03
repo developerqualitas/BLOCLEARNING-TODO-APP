@@ -1,5 +1,4 @@
 import 'package:bl_todo_app/cubits/cubits.dart';
-import 'package:bl_todo_app/cubits/filtered_todos_cubit/filtered_todos_cubit.dart';
 import 'package:bl_todo_app/models/todo_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,53 +9,91 @@ class ShowTodoListWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final todo = context.watch<FilteredTodosCubit>().state.filteredTodoList;
-    return ListView.separated(
-      primary: false,
-      shrinkWrap: true,
-      itemBuilder: (context, index) {
-        return Dismissible(
-          key: ValueKey(todo[index].id),
-          background: showDismissBackground(isLeft: true),
-          secondaryBackground: showDismissBackground(isLeft: false),
-          child: TodoListItem(todoModel: todo[index]),
-          onDismissed: (_) {
-            context.read<TodoCubit>().deleteTodo(todo[index]);
-          },
-          confirmDismiss: (_) {
-            return showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (context) {
-                return AlertDialog(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  title: const Text("Are You Sure?"),
-                  content: const Text("Do you really want to delete this todo?"),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context, false);
-                      },
-                      child: const Text("No"),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context, true);
-                      },
-                      child: const Text("Yes"),
-                    ),
-                  ],
-                );
-              },
+    return MultiBlocListener(
+      listeners: [
+        /// TODO CUBIT
+        BlocListener<TodoCubit, TodoState>(
+          listener: (context, state) {
+            context.read<FilteredTodosCubit>().setFilteredTodos(
+              context.read<TodoFilterCubit>().state.todoFilter,
+              context.read<TodoSearchCubit>().state.searchText,
+              state.todoList,
             );
           },
-        );
-      },
-      separatorBuilder: (context, index) {
-        return const Divider(height: 1, thickness: 0.8);
-      },
-      itemCount: todo.length,
+        ),
+
+        /// TODO FILTER CUBIT
+        BlocListener<TodoFilterCubit, TodoFilterState>(
+          listener: (context, state) {
+            context.read<FilteredTodosCubit>().setFilteredTodos(
+              state.todoFilter,
+              context.read<TodoSearchCubit>().state.searchText,
+              context.read<TodoCubit>().state.todoList,
+            );
+          },
+        ),
+
+        /// TODO SEARCH CUBIT
+        BlocListener<TodoSearchCubit, TodoSearchState>(
+          listener: (context, state) {
+            context.read<FilteredTodosCubit>().setFilteredTodos(
+              context.read<TodoFilterCubit>().state.todoFilter,
+              state.searchText,
+              context.read<TodoCubit>().state.todoList,
+            );
+          },
+        ),
+      ],
+      child: ListView.separated(
+        primary: false,
+        shrinkWrap: true,
+        itemBuilder: (context, index) {
+          return Dismissible(
+            key: ValueKey(todo[index].id),
+            background: showDismissBackground(isLeft: true),
+            secondaryBackground: showDismissBackground(isLeft: false),
+            child: TodoListItem(todoModel: todo[index]),
+            onDismissed: (_) {
+              context.read<TodoCubit>().deleteTodo(todo[index]);
+            },
+            confirmDismiss: (_) {
+              return showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) {
+                  return AlertDialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    title: const Text("Are You Sure?"),
+                    content: const Text(
+                      "Do you really want to delete this todo?",
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context, false);
+                        },
+                        child: const Text("No"),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context, true);
+                        },
+                        child: const Text("Yes"),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          );
+        },
+        separatorBuilder: (context, index) {
+          return const Divider(height: 1, thickness: 0.8);
+        },
+        itemCount: todo.length,
+      ),
     );
   }
 
@@ -173,9 +210,10 @@ class _TodoListItemState extends State<TodoListItem> {
         style: TextStyle(
           fontSize: 16,
           color: widget.todoModel.completed ? Colors.grey : Colors.black87,
-          decoration: widget.todoModel.completed
-              ? TextDecoration.lineThrough
-              : TextDecoration.none,
+          decoration:
+              widget.todoModel.completed
+                  ? TextDecoration.lineThrough
+                  : TextDecoration.none,
         ),
       ),
     );
