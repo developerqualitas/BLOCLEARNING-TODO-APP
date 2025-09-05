@@ -96,101 +96,110 @@ class _TodoListItemState extends State<TodoListItem> {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      onTap: () {
-        widget.todoModel.completed == false
-            ? showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (context) {
-                bool _error = false;
-                todoUpdateController.text = widget.todoModel.desc;
-                return StatefulBuilder(
-                  builder: (context, setState) {
-                    return AlertDialog(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      title: const Text(
-                        "Update Todo",
-                        style: TextStyle(fontSize: 18),
-                      ),
-                      content: TextFormField(
-                        controller: todoUpdateController,
-                        decoration: InputDecoration(
-                          hintText: "Enter todo",
-                          errorText: _error ? "Value cannot be empty" : null,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+    return MultiBlocListener(
+      listeners: [
+  BlocListener<>(listener: (context, state) {
+
+  },)
+      ],
+     
+        child:  ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          onTap: () {
+            widget.todoModel.completed == false
+                ? showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) {
+                    bool _error = false;
+                    todoUpdateController.text = widget.todoModel.desc;
+                    return StatefulBuilder(
+                      builder: (context, setState) {
+                        return AlertDialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 10,
-                            horizontal: 12,
+                          title: const Text(
+                            "Update Todo",
+                            style: TextStyle(fontSize: 18),
                           ),
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context, false);
-                          },
-                          child: const Text("Cancel"),
-                        ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                          content: TextFormField(
+                            controller: todoUpdateController,
+                            decoration: InputDecoration(
+                              hintText: "Enter todo",
+                              errorText: _error ? "Value cannot be empty" : null,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 10,
+                                horizontal: 12,
+                              ),
                             ),
                           ),
-                          onPressed: () {
-                            setState(() {
-                              _error = todoUpdateController.text.isEmpty;
-                              if (!_error) {
-                                context.read<TodoListBloc>().add(
-                                  EditTodoEvent(
-                                    todoId: widget.todoModel.id,
-                                    todoDesc: todoUpdateController.text.trim(),
-                                  ),
-                                );
-
-                                Navigator.pop(context);
-                              }
-                            });
-                          },
-                          child: const Text("Update"),
-                        ),
-                      ],
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context, false);
+                              },
+                              child: const Text("Cancel"),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blueAccent,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _error = todoUpdateController.text.isEmpty;
+                                  if (!_error) {
+                                    context.read<TodoListBloc>().add(
+                                      EditTodoEvent(
+                                        todoId: widget.todoModel.id,
+                                        todoDesc: todoUpdateController.text.trim(),
+                                      ),
+                                    );
+        
+                                    Navigator.pop(context);
+                                  }
+                                });
+                              },
+                              child: const Text("Update"),
+                            ),
+                          ],
+                        );
+                      },
                     );
                   },
+                )
+                : ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("once you completed can not edit !")),
                 );
-              },
-            )
-            : ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("once you completed can not edit !")),
-            );
-      },
-      leading: Checkbox(
-        value: widget.todoModel.completed,
-        onChanged: (bool? newValue) {
-          context.read<TodoListBloc>().add(
-            ToggleTodoEvent(todoId: widget.todoModel.id),
-          );
-        },
-      ),
-      title: Text(
-        widget.todoModel.desc,
-        style: TextStyle(
-          fontSize: 16,
-          color: widget.todoModel.completed ? Colors.grey : Colors.black87,
-          decoration:
-              widget.todoModel.completed
-                  ? TextDecoration.lineThrough
-                  : TextDecoration.none,
-        ),
-      ),
+          },
+          leading: Checkbox(
+            value: widget.todoModel.completed,
+            onChanged: (bool? newValue) {
+              context.read<TodoListBloc>().add(
+                ToggleTodoEvent(todoId: widget.todoModel.id),
+              );
+            },
+          ),
+          title: Text(
+            widget.todoModel.desc,
+            style: TextStyle(
+              fontSize: 16,
+              color: widget.todoModel.completed ? Colors.grey : Colors.black87,
+              decoration:
+                  widget.todoModel.completed
+                      ? TextDecoration.lineThrough
+                      : TextDecoration.none,
+            ),
+          ),
+        );
+      
     );
   }
 }
