@@ -1,5 +1,4 @@
-import 'package:bl_todo_app/cubits/cubits.dart';
-import 'package:bl_todo_app/cubits/filtered_todos_cubit/filtered_todos_cubit.dart';
+import 'package:bl_todo_app/blocs/blocs.dart';
 import 'package:bl_todo_app/models/todo_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,7 +8,7 @@ class ShowTodoListWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final todo = context.watch<FilteredTodosCubit>().state.filteredTodoList;
+    final todo = context.watch<TodoFilteredBloc>().state.filteredTodoList;
     return ListView.separated(
       primary: false,
       shrinkWrap: true,
@@ -20,7 +19,9 @@ class ShowTodoListWidget extends StatelessWidget {
           secondaryBackground: showDismissBackground(isLeft: false),
           child: TodoListItem(todoModel: todo[index]),
           onDismissed: (_) {
-            context.read<TodoCubit>().deleteTodo(todo[index]);
+            context.read<TodoListBloc>().add(
+              RemoveTodoEvent(todoModel: todo[index]),
+            );
           },
           confirmDismiss: (_) {
             return showDialog(
@@ -32,7 +33,9 @@ class ShowTodoListWidget extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   title: const Text("Are You Sure?"),
-                  content: const Text("Do you really want to delete this todo?"),
+                  content: const Text(
+                    "Do you really want to delete this todo?",
+                  ),
                   actions: [
                     TextButton(
                       onPressed: () {
@@ -96,76 +99,85 @@ class _TodoListItemState extends State<TodoListItem> {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       onTap: () {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) {
-            bool _error = false;
-            todoUpdateController.text = widget.todoModel.desc;
-            return StatefulBuilder(
-              builder: (context, setState) {
-                return AlertDialog(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  title: const Text(
-                    "Update Todo",
-                    style: TextStyle(fontSize: 18),
-                  ),
-                  content: TextFormField(
-                    controller: todoUpdateController,
-                    decoration: InputDecoration(
-                      hintText: "Enter todo",
-                      errorText: _error ? "Value cannot be empty" : null,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+        widget.todoModel.completed == false
+            ? showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) {
+                bool _error = false;
+                todoUpdateController.text = widget.todoModel.desc;
+                return StatefulBuilder(
+                  builder: (context, setState) {
+                    return AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 12,
+                      title: const Text(
+                        "Update Todo",
+                        style: TextStyle(fontSize: 18),
                       ),
-                    ),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context, false);
-                      },
-                      child: const Text("Cancel"),
-                    ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                      content: TextFormField(
+                        controller: todoUpdateController,
+                        decoration: InputDecoration(
+                          hintText: "Enter todo",
+                          errorText: _error ? "Value cannot be empty" : null,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                            horizontal: 12,
+                          ),
                         ),
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _error = todoUpdateController.text.isEmpty;
-                          if (!_error) {
-                            context.read<TodoCubit>().editTodo(
-                              todoUpdateController.text.trim(),
-                              widget.todoModel.id,
-                            );
-                            Navigator.pop(context);
-                          }
-                        });
-                      },
-                      child: const Text("Update"),
-                    ),
-                  ],
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context, false);
+                          },
+                          child: const Text("Cancel"),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blueAccent,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _error = todoUpdateController.text.isEmpty;
+                              if (!_error) {
+                                context.read<TodoListBloc>().add(
+                                  EditTodoEvent(
+                                    todoId: widget.todoModel.id,
+                                    todoDesc: todoUpdateController.text.trim(),
+                                  ),
+                                );
+
+                                Navigator.pop(context);
+                              }
+                            });
+                          },
+                          child: const Text("Update"),
+                        ),
+                      ],
+                    );
+                  },
                 );
               },
+            )
+            : ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("once you completed can not edit !")),
             );
-          },
-        );
       },
       leading: Checkbox(
         value: widget.todoModel.completed,
         onChanged: (bool? newValue) {
-          context.read<TodoCubit>().toggleTodo(widget.todoModel.id);
+          context.read<TodoListBloc>().add(
+            ToggleTodoEvent(todoId: widget.todoModel.id),
+          );
         },
       ),
       title: Text(
@@ -173,9 +185,10 @@ class _TodoListItemState extends State<TodoListItem> {
         style: TextStyle(
           fontSize: 16,
           color: widget.todoModel.completed ? Colors.grey : Colors.black87,
-          decoration: widget.todoModel.completed
-              ? TextDecoration.lineThrough
-              : TextDecoration.none,
+          decoration:
+              widget.todoModel.completed
+                  ? TextDecoration.lineThrough
+                  : TextDecoration.none,
         ),
       ),
     );
