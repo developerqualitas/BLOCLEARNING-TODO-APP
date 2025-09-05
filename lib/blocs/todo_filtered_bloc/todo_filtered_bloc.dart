@@ -21,4 +21,38 @@ class TodoFilteredBloc extends Bloc<TodoFilteredEvent, TodoFilteredState> {
   ) {
     emit(state.copyWith(filteredTodoList: event.filteredTodoList));
   }
+
+  void setFilteredTodos({
+    required TodoFilter todoFilter,
+    required String searchText,
+    required List<TodoModel> todoList,
+  }) {
+    List<TodoModel> filterdTodoList;
+
+    switch (todoFilter) {
+      case TodoFilter.active:
+        filterdTodoList =
+            todoList.where((TodoModel todos) => !todos.completed).toList();
+        break;
+      case TodoFilter.completed:
+        filterdTodoList =
+            todoList.where((TodoModel todos) => todos.completed).toList();
+        break;
+      case TodoFilter.all:
+      default:
+        filterdTodoList = todoList;
+    }
+
+    if (searchText.isNotEmpty) {
+      filterdTodoList =
+          filterdTodoList
+              .where(
+                (TodoModel todoModel) =>
+                    todoModel.desc.toLowerCase().contains(searchText),
+              )
+              .toList();
+    }
+
+    emit(state.copyWith(filteredTodoList: filterdTodoList));
+  }
 }
