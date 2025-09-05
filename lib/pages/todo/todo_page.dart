@@ -1,10 +1,7 @@
-import 'package:bl_todo_app/cubits/active_todo/active_todo_cubit.dart';
 import 'package:bl_todo_app/pages/todo/widgets/create_todo_widget.dart';
 import 'package:bl_todo_app/pages/todo/widgets/search_and_filter_widget.dart';
 import 'package:bl_todo_app/pages/todo/widgets/todo_header_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'widgets/show_todo_list_widget.dart';
 
 class TodoPage extends StatelessWidget {

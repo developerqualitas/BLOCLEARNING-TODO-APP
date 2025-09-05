@@ -1,79 +1,91 @@
 import 'dart:async';
 
-import 'package:bl_todo_app/cubits/todo/todo_cubit.dart';
-import 'package:bl_todo_app/cubits/todo_filter/todo_filter_cubit.dart';
-import 'package:bl_todo_app/cubits/todo_search/todo_search_cubit.dart';
+import 'package:bl_todo_app/blocs/blocs.dart';
 import 'package:bl_todo_app/models/todo_model.dart';
+import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
-part 'filtered_todos_state.dart';
+part 'todo_filtered_event.dart';
+part 'todo_filtered_state.dart';
 
-class FilteredTodosCubit extends Cubit<FilteredTodosState> {
+class TodoFilteredBloc extends Bloc<TodoFilteredEvent, TodoFilteredState> {
   late StreamSubscription todoFilterStreamSubscription;
   late StreamSubscription todoSearchStreamSubscription;
   late StreamSubscription todoStreamSubscription;
 
-  final TodoCubit todoCubit;
-  final TodoSearchCubit todoSearchCubit;
-  final TodoFilterCubit todoFilterCubit;
+  final TodoListBloc todoListBloc;
+  final TodoSearchBloc todoSearchBloc;
+  final TodoFilterBloc todoFilterBloc;
 
   final List<TodoModel> initialTodoList;
 
-  FilteredTodosCubit({
-    required this.todoFilterCubit,
-    required this.todoSearchCubit,
-    required this.todoCubit,
-    required this.initialTodoList
-  }) : super(FilteredTodosState(filteredTodoList: initialTodoList)) {
-    todoFilterStreamSubscription = todoFilterCubit.stream.listen((
+  TodoFilteredBloc({
+    required this.todoListBloc,
+    required this.todoSearchBloc,
+    required this.todoFilterBloc,
+    required this.initialTodoList,
+  }) : super(TodoFilteredState(filteredTodoList: initialTodoList)) {
+    todoFilterStreamSubscription = todoFilterBloc.stream.listen((
       TodoFilterState filterState,
     ) {
       setFilteredTodos();
     });
 
-    todoSearchStreamSubscription = todoSearchCubit.stream.listen((
+    todoSearchStreamSubscription = todoSearchBloc.stream.listen((
       TodoSearchState searchState,
     ) {
       setFilteredTodos();
     });
-    todoStreamSubscription = todoCubit.stream.listen((TodoState todoState) {
+
+    todoStreamSubscription = todoListBloc.stream.listen((todoState) {
       setFilteredTodos();
     });
+
+    on<CalculatedFilteredTodoListEvent>(
+      _calculatedFilteredTodoListEventHandler,
+    );
   }
+
   void setFilteredTodos() {
     List<TodoModel> filterdTodoList;
 
-    switch (todoFilterCubit.state.todoFilter) {
+    switch (todoFilterBloc.state.todoFilter) {
       case TodoFilter.active:
         filterdTodoList =
-            todoCubit.state.todoList
+            todoListBloc.state.todoList
                 .where((TodoModel todos) => !todos.completed)
                 .toList();
         break;
       case TodoFilter.completed:
         filterdTodoList =
-            todoCubit.state.todoList
+            todoListBloc.state.todoList
                 .where((TodoModel todos) => todos.completed)
                 .toList();
         break;
       case TodoFilter.all:
       default:
-        filterdTodoList = todoCubit.state.todoList;
+        filterdTodoList = todoListBloc.state.todoList;
     }
 
-    if (todoSearchCubit.state.searchText.isNotEmpty) {
+    if (todoSearchBloc.state.searchText.isNotEmpty) {
       filterdTodoList =
           filterdTodoList
               .where(
                 (TodoModel todoModel) => todoModel.desc.toLowerCase().contains(
-                  todoSearchCubit.state.searchText,
+                  todoSearchBloc.state.searchText,
                 ),
               )
               .toList();
     }
 
     emit(state.copyWith(filteredTodoList: filterdTodoList));
+  }
+
+  void _calculatedFilteredTodoListEventHandler(
+    CalculatedFilteredTodoListEvent event,
+    Emitter<TodoFilteredState> emit,
+  ) {
+    emit(state.copyWith(filteredTodoList: event.filteredTodoList));
   }
 
   @override

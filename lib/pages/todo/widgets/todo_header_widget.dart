@@ -1,7 +1,8 @@
+import 'package:bl_todo_app/blocs/blocs.dart';
+import 'package:bl_todo_app/blocs/todo-active-bloc/todo_active_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../cubits/active_todo/active_todo_cubit.dart';
 
 class TodoHeaderWidget extends StatelessWidget {
   const TodoHeaderWidget({super.key});
@@ -25,7 +26,7 @@ class TodoHeaderWidget extends StatelessWidget {
           ),
 
           /// Active todos counter
-          BlocBuilder<ActiveTodoCubit, ActiveTodoState>(
+          BlocBuilder<TodoActiveBloc, TodoActiveState>(
             builder: (context, state) {
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

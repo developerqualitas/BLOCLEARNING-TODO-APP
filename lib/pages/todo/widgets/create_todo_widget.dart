@@ -1,4 +1,4 @@
-import 'package:bl_todo_app/cubits/cubits.dart';
+import 'package:bl_todo_app/blocs/blocs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -26,10 +26,16 @@ class _CreateTodoWidgetState extends State<CreateTodoWidget> {
         controller: todoController,
         decoration: InputDecoration(
           hintText: "Add a new task...",
-          prefixIcon: const Icon(Icons.add_task_outlined, color: Colors.blueAccent),
+          prefixIcon: const Icon(
+            Icons.add_task_outlined,
+            color: Colors.blueAccent,
+          ),
           filled: true,
           fillColor: Colors.grey.shade100,
-          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 14,
+            horizontal: 16,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
@@ -41,7 +47,7 @@ class _CreateTodoWidgetState extends State<CreateTodoWidget> {
         ),
         onFieldSubmitted: (String? desc) {
           if (desc != null && desc.trim().isNotEmpty) {
-            context.read<TodoCubit>().addTodo(desc);
+            context.read<TodoListBloc>().add(AddTodoEvent(todoDesc: desc));
             todoController.clear();
           }
         },
